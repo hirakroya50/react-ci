@@ -10,7 +10,7 @@ const features = [
   {
     icon: "🎨",
     title: "Beautiful Design",
-    desc: "Pixel-perfect components with a cohesive design language built for modern products.",
+    desc: "Pixel-perfect  components with a cohesive design language built for modern products.",
   },
   {
     icon: "🔒",
