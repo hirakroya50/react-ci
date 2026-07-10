@@ -140,7 +140,7 @@ function App() {
       <section className="hero-section">
         <div className="hero-glow" />
         <div className="hero-content">
-          <div className="hero-badge">🚀 Now in public beta</div>
+          <div className="hero-badge">🚀 Now in beta</div>
           <h1 className="hero-title">
             Build products
             <br />
