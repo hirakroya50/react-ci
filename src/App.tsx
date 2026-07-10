@@ -5,7 +5,7 @@ const features = [
   {
     icon: "⚡",
     title: "Lightning Fast",
-    desc: "Optimized  with instant load times and smooth animations out of the box.",
+    desc: "Optimized with instant load times and smooth animations out of the box.",
   },
   {
     icon: "🎨",
