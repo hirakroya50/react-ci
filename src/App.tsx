@@ -142,7 +142,7 @@ function App() {
         <div className="hero-content">
           <div className="hero-badge">🚀 Now in public beta</div>
           <h1 className="hero-title">
-            Build APPs
+            Build products
             <br />
             <span className="gradient-text">10× faster</span>
           </h1>
