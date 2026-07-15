@@ -4,11 +4,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../components/AuthProvider';
-import { Plus, Trash2, Loader2, ArrowRight, Activity, Search, History, Filter, LayoutGrid } from 'lucide-react';
+import { Plus, Loader2, ArrowRight, Activity, Search, History, LayoutGrid, FolderPlus, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import ActivityFeed from '../components/ActivityFeed';
 import ProjectPulse from '../components/ProjectPulse';
+import EmptyState from '../components/EmptyState';
 
 interface Project {
   id: string;
@@ -32,7 +33,6 @@ const Dashboard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [newProject, setNewProject] = useState({ name: '', description: '', category: 'Work' });
-  const [view, setView] = useState<'active' | 'archived'>('active');
 
   const fetchData = async () => {
     try {
@@ -107,11 +107,10 @@ const Dashboard = () => {
 
   const filteredProjects = useMemo(() => {
     return projects.filter(p => 
-      (p.status === view || (view === 'active' && !p.status)) && 
-      (p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-       p.category.toLowerCase().includes(searchQuery.toLowerCase()))
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      p.category.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [projects, view, searchQuery]);
+  }, [projects, searchQuery]);
 
   const totalStats = useMemo(() => {
     const totalTasks = projects.reduce((acc, p) => acc + (p.task_stats?.total || 0), 0);
@@ -188,43 +187,48 @@ const Dashboard = () => {
           {loading ? (
             <div className="flex justify-center p-20"><Loader2 className="animate-spin text-[var(--accent)]" size={40} /></div>
           ) : (
-            <motion.div 
-              layout
-              className="grid gap-4"
-            >
+            <motion.div layout className="grid gap-4">
               <AnimatePresence mode='popLayout'>
-                {filteredProjects.map((project) => (
-                  <motion.div 
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    key={project.id} 
-                    onClick={() => navigate(`/projects/${project.id}`)}
-                    className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between group hover:border-[var(--accent)] cursor-pointer hover:shadow-md transition-all"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--bg2)] text-[var(--text-muted)] uppercase tracking-tight">
-                          {project.category}
-                        </span>
-                        <h3 className="font-bold text-[var(--heading)] group-hover:text-[var(--accent)] transition-colors">{project.name}</h3>
-                      </div>
-                      <div className="flex items-center gap-4 mt-2">
-                        <div className="w-24 h-1 bg-[var(--bg2)] rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-[var(--accent)] transition-all duration-1000" 
-                            style={{ width: `${project.task_stats?.total ? Math.round((project.task_stats?.completed || 0) / project.task_stats.total * 100) : 0}%` }} 
-                          />
+                {filteredProjects.length > 0 ? (
+                  filteredProjects.map((project) => (
+                    <motion.div 
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      key={project.id} 
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                      className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between group hover:border-[var(--accent)] cursor-pointer hover:shadow-md transition-all"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--bg2)] text-[var(--text-muted)] uppercase tracking-tight">
+                            {project.category}
+                          </span>
+                          <h3 className="font-bold text-[var(--heading)] group-hover:text-[var(--accent)] transition-colors">{project.name}</h3>
                         </div>
-                        <span className="text-[10px] font-bold text-[var(--text-muted)]">
-                          {project.task_stats?.completed || 0}/{project.task_stats?.total || 0} tasks
-                        </span>
+                        <div className="flex items-center gap-4 mt-2">
+                          <div className="w-24 h-1 bg-[var(--bg2)] rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-[var(--accent)] transition-all duration-1000" 
+                              style={{ width: `${project.task_stats?.total ? Math.round((project.task_stats?.completed || 0) / project.task_stats.total * 100) : 0}%` }} 
+                            />
+                          </div>
+                          <span className="text-[10px] font-bold text-[var(--text-muted)]">
+                            {project.task_stats?.completed || 0}/{project.task_stats?.total || 0} tasks
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <ArrowRight size={18} className="text-[var(--text-muted)] group-hover:translate-x-1 transition-transform" />
-                  </motion.div>
-                ))}
+                      <ArrowRight size={18} className="text-[var(--text-muted)] group-hover:translate-x-1 transition-transform" />
+                    </motion.div>
+                  ))
+                ) : (
+                  <EmptyState 
+                    icon={searchQuery ? AlertCircle : FolderPlus}
+                    title={searchQuery ? "No projects match your search" : "No projects found"}
+                    description={searchQuery ? "Try searching for a different term." : "Ready to start shipping? Create your first project above."}
+                  />
+                )}
               </AnimatePresence>
             </motion.div>
           )}

@@ -1,12 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../components/AuthProvider';
-import { ChevronLeft, Plus, Loader2, Search, CheckCircle2, Circle, Trash2, Calendar, LayoutGrid, List } from 'lucide-react';
+import { 
+  ChevronLeft, Plus, Loader2, Search, Trash2, 
+  Calendar, LayoutGrid, List, ClipboardList, AlertCircle
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import TaskItem from '../components/TaskItem';
+import EmptyState from '../components/EmptyState';
 
 interface Task {
   id: string;
@@ -25,12 +30,18 @@ const ProjectDetails = () => {
   const [project, setProject] = useState<any>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', priority: 'Medium', due_date: '' });
   const [taskSearch, setTaskSearch] = useState('');
+  
+  // Task editing state
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
 
   const fetchData = async () => {
     try {
-      const { data: projectData } = await supabase.from('projects').select('*').eq('id', id).single();
+      const { data: projectData, error: pError } = await supabase.from('projects').select('*').eq('id', id).single();
+      if (pError) throw pError;
       setProject(projectData);
 
       const { data: tasksData } = await supabase.from('tasks').select('*').eq('project_id', id).order('created_at', { ascending: false });
@@ -71,11 +82,12 @@ const ProjectDetails = () => {
     }
   };
 
-  const toggleTask = async (task: Task) => {
-    const { error } = await supabase.from('tasks').update({ is_completed: !task.is_completed }).eq('id', task.id);
+  const toggleTask = async (taskId: string, currentStatus: boolean) => {
+    const { error } = await supabase.from('tasks').update({ is_completed: !currentStatus }).eq('id', taskId);
     if (!error) {
-      setTasks(tasks.map(t => t.id === task.id ? { ...t, is_completed: !task.is_completed } : t));
-      if (!task.is_completed) {
+      setTasks(tasks.map(t => t.id === taskId ? { ...t, is_completed: !currentStatus } : t));
+      const task = tasks.find(t => t.id === taskId);
+      if (!currentStatus && task) {
         await supabase.from('activity_logs').insert([{
           user_id: user?.id,
           project_id: id,
@@ -87,11 +99,52 @@ const ProjectDetails = () => {
     }
   };
 
-  const deleteTask = async (task: Task) => {
-    const { error } = await supabase.from('tasks').delete().eq('id', task.id);
+  const deleteTask = async (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    const { error } = await supabase.from('tasks').delete().eq('id', taskId);
     if (!error) {
-      setTasks(tasks.filter(t => t.id !== task.id));
+      setTasks(tasks.filter(t => t.id !== taskId));
       toast.success('Task removed');
+      if (task) {
+        await supabase.from('activity_logs').insert([{
+          user_id: user?.id,
+          project_id: id,
+          action: 'deleted',
+          entity_type: 'task',
+          entity_name: task.title
+        }]);
+      }
+    }
+  };
+
+  const startEditing = (task: Task) => {
+    setEditingTaskId(task.id);
+    setEditTitle(task.title);
+  };
+
+  const saveTaskEdit = async (taskId: string) => {
+    if (!editTitle.trim()) return;
+    const { error } = await supabase.from('tasks').update({ title: editTitle }).eq('id', taskId);
+    if (!error) {
+      setTasks(tasks.map(t => t.id === taskId ? { ...t, title: editTitle } : t));
+      setEditingTaskId(null);
+      toast.success('Task updated');
+    }
+  };
+
+  const deleteProject = async () => {
+    if (!window.confirm('Are you sure you want to delete this project and all its tasks?')) return;
+    
+    setIsDeletingProject(true);
+    try {
+      const { error } = await supabase.from('projects').delete().eq('id', id);
+      if (error) throw error;
+      
+      toast.success('Project deleted');
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast.error(error.message);
+      setIsDeletingProject(false);
     }
   };
 
@@ -102,9 +155,19 @@ const ProjectDetails = () => {
   return (
     <div className="min-h-screen bg-[var(--bg)] pt-24 pb-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <Link to="/dashboard" className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--accent)] mb-6 transition-colors">
-          <ChevronLeft size={18} /> Back to Workspace
-        </Link>
+        <div className="flex items-center justify-between mb-6">
+          <Link to="/dashboard" className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
+            <ChevronLeft size={18} /> Back to Workspace
+          </Link>
+          <button 
+            onClick={deleteProject} 
+            disabled={isDeletingProject}
+            className="flex items-center gap-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            {isDeletingProject ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+            Delete Project
+          </button>
+        </div>
 
         <header className="mb-8 p-6 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
           <div className="flex items-center gap-3 mb-2">
@@ -169,41 +232,37 @@ const ProjectDetails = () => {
 
           <motion.div layout className="divide-y divide-[var(--border)]">
             <AnimatePresence mode='popLayout'>
-              {filteredTasks.map((task) => (
-                <motion.div 
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  key={task.id} 
-                  className="p-4 flex items-center justify-between group hover:bg-[var(--bg2)] transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => toggleTask(task)} className="transition-transform active:scale-90">
-                      {task.is_completed ? <CheckCircle2 className="text-green-500" size={20} /> : <Circle className="text-[var(--text-muted)]" size={20} />}
-                    </button>
-                    <div className="flex flex-col">
-                      <span className={`${task.is_completed ? 'line-through text-[var(--text-muted)]' : 'text-[var(--heading)]'} font-medium`}>
-                        {task.title}
-                      </span>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className={`text-[9px] font-bold uppercase ${task.priority === 'High' ? 'text-red-500' : task.priority === 'Medium' ? 'text-amber-500' : 'text-blue-500'}`}>
-                          {task.priority}
-                        </span>
-                        {task.due_date && (
-                          <span className="flex items-center gap-1 text-[9px] text-[var(--text-muted)]">
-                            <Calendar size={10} />
-                            {new Date(task.due_date).toLocaleDateString()}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <button onClick={() => deleteTask(task)} className="p-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
-                    <Trash2 size={16} />
-                  </button>
-                </motion.div>
-              ))}
+              {filteredTasks.length > 0 ? (
+                filteredTasks.map((task) => (
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    key={task.id}
+                  >
+                    <TaskItem 
+                      task={task}
+                      onToggle={toggleTask}
+                      onDelete={deleteTask}
+                      onEdit={startEditing}
+                      isEditing={editingTaskId === task.id}
+                      editTitle={editTitle}
+                      onEditChange={setEditTitle}
+                      onSave={saveTaskEdit}
+                      onCancel={() => setEditingTaskId(null)}
+                    />
+                  </motion.div>
+                ))
+              ) : (
+                <div className="p-8">
+                  <EmptyState 
+                    icon={taskSearch ? AlertCircle : ClipboardList}
+                    title={taskSearch ? "No tasks found" : "No tasks yet"}
+                    description={taskSearch ? "Try a different search term or clear filters." : "Start by adding a task using the form above."}
+                  />
+                </div>
+              )}
             </AnimatePresence>
           </motion.div>
         </div>
