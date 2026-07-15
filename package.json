@@ -11,8 +11,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@supabase/auth-ui-react": "^0.4.7",
+    "@supabase/auth-ui-shared": "^0.1.8",
+    "@supabase/supabase-js": "^2.110.4",
+    "lucide-react": "^1.24.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "react-hot-toast": "^2.6.0",
+    "react-router-dom": "^7.18.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.54.2",
