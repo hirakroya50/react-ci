@@ -1,5 +1,4 @@
-import React from 'react';
-import { CheckCircle2, Circle, Calendar, Edit2, Trash2, X } from 'lucide-react';
+import { CheckCircle2, Circle, Calendar, Edit2, Trash2, X } from "lucide-react";
 
 interface Task {
   id: string;
@@ -21,23 +20,34 @@ interface TaskItemProps {
   onCancel: () => void;
 }
 
-const TaskItem = ({ 
-  task, onToggle, onDelete, onEdit, 
-  isEditing, editTitle, onEditChange, onSave, onCancel 
+const TaskItem = ({
+  task,
+  onToggle,
+  onDelete,
+  onEdit,
+  isEditing,
+  editTitle,
+  onEditChange,
+  onSave,
+  onCancel,
 }: TaskItemProps) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'High': return 'text-red-500 bg-red-50 dark:bg-red-950/20';
-      case 'Medium': return 'text-amber-500 bg-amber-50 dark:bg-amber-950/20';
-      case 'Low': return 'text-blue-500 bg-blue-50 dark:bg-blue-950/20';
-      default: return 'text-gray-500 bg-gray-50 dark:bg-gray-800';
+      case "High":
+        return "text-red-500 bg-red-50 dark:bg-red-950/20";
+      case "Medium":
+        return "text-amber-500 bg-amber-50 dark:bg-amber-950/20";
+      case "Low":
+        return "text-blue-500 bg-blue-50 dark:bg-blue-950/20";
+      default:
+        return "text-gray-500 bg-gray-50 dark:bg-gray-800";
     }
   };
 
   return (
     <div className="p-4 flex items-center justify-between group hover:bg-[var(--bg2)] transition-colors">
       <div className="flex items-center gap-3 flex-1">
-        <button 
+        <button
           onClick={() => onToggle(task.id, task.is_completed)}
           className="transition-transform active:scale-90"
         >
@@ -47,33 +57,43 @@ const TaskItem = ({
             <Circle className="text-[var(--text-muted)]" size={20} />
           )}
         </button>
-        
+
         {isEditing ? (
           <div className="flex items-center gap-2 flex-1">
-            <input 
+            <input
               autoFocus
               className="flex-1 bg-[var(--surface)] border border-[var(--border)] rounded px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)]"
               value={editTitle}
               onChange={(e) => onEditChange(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') onSave(task.id);
-                if (e.key === 'Escape') onCancel();
+                if (e.key === "Enter") onSave(task.id);
+                if (e.key === "Escape") onCancel();
               }}
             />
-            <button onClick={() => onSave(task.id)} className="p-1 text-green-500 hover:bg-green-50 rounded">
+            <button
+              onClick={() => onSave(task.id)}
+              className="p-1 text-green-500 hover:bg-green-50 rounded"
+            >
               <CheckCircle2 size={16} />
             </button>
-            <button onClick={onCancel} className="p-1 text-red-500 hover:bg-red-50 rounded">
+            <button
+              onClick={onCancel}
+              className="p-1 text-red-500 hover:bg-red-50 rounded"
+            >
               <X size={16} />
             </button>
           </div>
         ) : (
           <div className="flex flex-col flex-1" onClick={() => onEdit(task)}>
-            <span className={`cursor-pointer ${task.is_completed ? 'line-through text-[var(--text-muted)]' : 'text-[var(--heading)]'}`}>
+            <span
+              className={`cursor-pointer ${task.is_completed ? "line-through text-[var(--text-muted)]" : "text-[var(--heading)]"}`}
+            >
               {task.title}
             </span>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`text-[9px] w-fit px-1.5 py-0.5 rounded uppercase font-bold ${getPriorityColor(task.priority)}`}>
+              <span
+                className={`text-[9px] w-fit px-1.5 py-0.5 rounded uppercase font-bold ${getPriorityColor(task.priority)}`}
+              >
                 {task.priority}
               </span>
               {task.due_date && (
@@ -86,7 +106,7 @@ const TaskItem = ({
           </div>
         )}
       </div>
-      
+
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
         {!isEditing && (
           <button

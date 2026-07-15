@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
-import { User, LogOut, LayoutDashboard, Settings } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 
 const Navbar = () => {
   const [darkMode, setDarkMode] = useState(false);

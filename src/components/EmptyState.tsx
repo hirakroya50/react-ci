@@ -1,13 +1,13 @@
 "use client";
 
-import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
 
 interface EmptyStateProps {
   icon: LucideIcon;
   title: string;
   description: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
 }
 
 const EmptyState = ({ icon: Icon, title, description, action }: EmptyStateProps) => {

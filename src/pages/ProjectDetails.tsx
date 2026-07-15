@@ -6,7 +6,7 @@ import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../components/AuthProvider';
 import { 
   ChevronLeft, Plus, Loader2, Search, Trash2, 
-  Calendar, LayoutGrid, List, ClipboardList, AlertCircle
+  LayoutGrid, List, ClipboardList, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
