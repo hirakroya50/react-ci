@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/components/AuthProvider';
+import { supabase } from '../integrations/supabase/client';
+import { useAuth } from '../components/AuthProvider';
 import { Plus, Trash2, Edit2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
