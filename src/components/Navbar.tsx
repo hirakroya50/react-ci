@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
+import { User, LogOut, LayoutDashboard, Settings } from 'lucide-react';
 
 const Navbar = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { session, signOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const stored = localStorage.getItem('theme');
@@ -26,6 +28,11 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   return (
     <nav className={`navbar${scrolled ? ' scrolled' : ''}`}>
       <div className="nav-inner">
@@ -34,15 +41,16 @@ const Navbar = () => {
           <span>Nexus</span>
         </Link>
         <ul className={`nav-links${menuOpen ? ' open' : ''}`}>
-          {['Features', 'Pricing', 'Docs', 'Blog'].map(item => (
+          {['Features', 'Pricing', 'Docs'].map(item => (
             <li key={item}>
               <Link to="/" onClick={() => setMenuOpen(false)}>{item}</Link>
             </li>
           ))}
           {session && (
-            <li>
-              <Link to="/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</Link>
-            </li>
+            <>
+              <li><Link to="/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</Link></li>
+              <li><Link to="/profile" onClick={() => setMenuOpen(false)}>Profile</Link></li>
+            </>
           )}
         </ul>
         <div className="nav-actions">
@@ -53,14 +61,20 @@ const Navbar = () => {
           >
             {darkMode ? '☀️' : '🌙'}
           </button>
+          
           {session ? (
-            <button onClick={() => signOut()} className="btn btn-ghost">Sign out</button>
+            <div className="flex items-center gap-2">
+              <button onClick={handleSignOut} className="btn btn-ghost" title="Sign out">
+                <LogOut size={18} />
+              </button>
+            </div>
           ) : (
             <>
               <Link to="/login" className="btn btn-ghost">Sign in</Link>
               <Link to="/login" className="btn btn-primary">Get Started</Link>
             </>
           )}
+          
           <button className="menu-btn" onClick={() => setMenuOpen(m => !m)} aria-label="Menu">
             <span /><span /><span />
           </button>
