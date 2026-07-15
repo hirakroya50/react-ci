@@ -45,7 +45,6 @@ const ProjectDetails = () => {
   });
   const [taskSearch, setTaskSearch] = useState("");
 
-  // Task editing state
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
 
@@ -123,12 +122,12 @@ const ProjectDetails = () => {
         ),
       );
       const task = tasks.find((t) => t.id === taskId);
-      if (!currentStatus && task) {
+      if (task) {
         await supabase.from("activity_logs").insert([
           {
             user_id: user?.id,
             project_id: id,
-            action: "completed",
+            action: !currentStatus ? "completed" : "updated",
             entity_type: "task",
             entity_name: task.title,
           },
@@ -174,6 +173,17 @@ const ProjectDetails = () => {
       );
       setEditingTaskId(null);
       toast.success("Task updated");
+      
+      // Log task title update
+      await supabase.from("activity_logs").insert([
+        {
+          user_id: user?.id,
+          project_id: id,
+          action: "updated",
+          entity_type: "task",
+          entity_name: editTitle,
+        },
+      ]);
     }
   };
 
@@ -187,6 +197,14 @@ const ProjectDetails = () => {
 
     setIsDeletingProject(true);
     try {
+      // Log project deletion activity before it's gone
+      await supabase.from("activity_logs").insert([{
+        user_id: user?.id,
+        action: 'deleted',
+        entity_type: 'project',
+        entity_name: project?.name
+      }]);
+
       const { error } = await supabase.from("projects").delete().eq("id", id);
       if (error) throw error;
 

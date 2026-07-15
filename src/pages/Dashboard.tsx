@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../components/AuthProvider';
-import { Plus, Loader2, ArrowRight, Activity, Search, History, LayoutGrid, FolderPlus, AlertCircle, Edit2, Check, X, Star } from 'lucide-react';
+import { Plus, Loader2, ArrowRight, Search, History, LayoutGrid, FolderPlus, AlertCircle, Star, Filter, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import ActivityFeed from '../components/ActivityFeed';
@@ -31,6 +31,8 @@ interface FocusTask {
   priority: string;
 }
 
+const CATEGORIES = ["All", "Work", "Personal", "Study", "Hobby"];
+
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -40,10 +42,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [newProject, setNewProject] = useState({ name: '', description: '', category: 'Work' });
-  
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
 
   const fetchStats = async (projectId: string) => {
     const { count: total } = await supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('project_id', projectId);
@@ -67,7 +67,6 @@ const Dashboard = () => {
 
       setProjects(projectsWithStats);
 
-      // Fetch "Focus Tasks" - High priority incomplete tasks
       const { data: tasksData } = await supabase
         .from('tasks')
         .select('id, title, priority, projects(name)')
@@ -109,6 +108,16 @@ const Dashboard = () => {
     try {
       const { data, error } = await supabase.from('projects').insert([{ ...newProject, user_id: user?.id }]).select().single();
       if (error) throw error;
+      
+      // Log project creation activity
+      await supabase.from('activity_logs').insert([{
+        user_id: user?.id,
+        project_id: data.id,
+        action: 'created',
+        entity_type: 'project',
+        entity_name: data.name
+      }]);
+
       toast.success('Project launched!');
       setNewProject({ name: '', description: '', category: 'Work' });
       fetchData();
@@ -119,17 +128,19 @@ const Dashboard = () => {
     }
   };
 
-  const handleUpdateProject = async (id: string) => {
-    if (!editName.trim()) return;
-    const { error } = await supabase.from('projects').update({ name: editName }).eq('id', id);
-    if (!error) { setEditingId(null); fetchData(); toast.success('Updated'); }
-  };
+  const filteredProjects = useMemo(() => {
+    return projects.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [projects, searchQuery, selectedCategory]);
 
-  const filteredProjects = useMemo(() => projects.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())), [projects, searchQuery]);
-  const totalStats = useMemo(() => {
+  const globalStats = useMemo(() => {
     const total = projects.reduce((acc, p) => acc + (p.task_stats?.total || 0), 0);
-    const done = projects.reduce((acc, p) => acc + (p.task_stats?.completed || 0), 0);
-    return { total, done };
+    const completed = projects.reduce((acc, p) => acc + (p.task_stats?.completed || 0), 0);
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return { total, completed, percentage };
   }, [projects]);
 
   return (
@@ -140,12 +151,12 @@ const Dashboard = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
               <div className="min-w-0">
                 <h1 className="text-3xl md:text-5xl font-black text-[var(--heading)] tracking-tighter">Workspace</h1>
-                <p className="text-[var(--text-muted)] text-lg mt-1">Hello, manage your universe from here.</p>
+                <p className="text-[var(--text-muted)] text-lg mt-1">Ready to ship something amazing today?</p>
               </div>
               <div className="relative w-full md:w-80">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={18} />
                 <input 
-                  type="text" placeholder="Search anything..."
+                  type="text" placeholder="Search projects..."
                   className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] text-sm focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
                   value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -154,49 +165,79 @@ const Dashboard = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
               <div className="md:col-span-2 bg-[var(--surface)] p-6 md:p-8 rounded-3xl border border-[var(--border)] shadow-sm">
-                <div className="flex items-center gap-2 mb-6">
-                  <Star size={20} className="text-amber-500 fill-amber-500" />
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--heading)]">Focus Area</h3>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <Star size={20} className="text-amber-500 fill-amber-500" />
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--heading)]">Focus Area</h3>
+                  </div>
+                  <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase">High Priority Tasks</div>
                 </div>
                 {focusTasks.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {focusTasks.map(task => (
                       <div key={task.id} className="flex items-center justify-between p-4 rounded-2xl bg-[var(--bg2)] border border-[var(--border)] group hover:border-indigo-500 transition-colors">
                         <div className="min-w-0">
-                          <p className="font-bold text-[var(--heading)] truncate">{task.title}</p>
+                          <p className="font-bold text-[var(--heading)] truncate text-sm">{task.title}</p>
                           <p className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wide mt-1">{task.project_name}</p>
                         </div>
-                        <span className="flex-shrink-0 text-[9px] font-black px-2 py-1 rounded bg-red-100 text-red-600 uppercase">High Priority</span>
+                        <ArrowRight size={14} className="text-indigo-400 opacity-0 group-hover:opacity-100 transition-all" />
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-[var(--text-muted)] italic">No high-priority tasks pending. Nice work!</p>
+                  <div className="p-4 text-center border border-dashed border-[var(--border)] rounded-2xl">
+                    <p className="text-sm text-[var(--text-muted)] italic">No urgent tasks. You're all caught up!</p>
+                  </div>
                 )}
               </div>
               <div className="bg-indigo-600 p-8 rounded-3xl shadow-xl shadow-indigo-500/20 text-white flex flex-col justify-between overflow-hidden relative">
                 <div className="relative z-10">
-                  <LayoutGrid size={32} className="mb-6 opacity-40" />
-                  <h3 className="text-xs font-black uppercase tracking-widest opacity-80">Total Activity</h3>
-                  <div className="text-6xl font-black mt-2 tracking-tighter">{projects.length}</div>
+                  <Target size={32} className="mb-6 opacity-40" />
+                  <h3 className="text-xs font-black uppercase tracking-widest opacity-80">Global Progress</h3>
+                  <div className="text-5xl font-black mt-2 tracking-tighter">{globalStats.percentage}%</div>
+                  <p className="text-[10px] font-bold mt-2 opacity-70 uppercase tracking-widest">{globalStats.completed} / {globalStats.total} Tasks Finished</p>
                 </div>
                 <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
               </div>
             </div>
 
-            <div className="bg-[var(--surface)] p-6 rounded-3xl border border-[var(--border)] shadow-sm mb-12">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <input
-                  type="text" placeholder="Quick Launch: Project Name"
-                  className="flex-1 px-5 py-3.5 rounded-2xl border border-[var(--border)] bg-[var(--bg2)] text-base font-medium outline-none focus:ring-2 focus:ring-indigo-500"
-                  value={newProject.name} onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                  required
-                />
-                <button type="submit" disabled={isSubmitting} onClick={handleAddProject} className="btn btn-primary px-8 py-3.5 rounded-2xl font-black text-base shadow-lg">
-                  {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <Plus size={20} />}
-                  Launch
-                </button>
+            <div className="flex flex-col md:flex-row gap-6 mb-12">
+              <div className="flex-1 bg-[var(--surface)] p-6 rounded-3xl border border-[var(--border)] shadow-sm">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <input
+                    type="text" placeholder="Launch Project: New Project Name"
+                    className="flex-1 px-5 py-3.5 rounded-2xl border border-[var(--border)] bg-[var(--bg2)] text-base font-medium outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={newProject.name} onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                  />
+                  <select
+                    className="px-4 py-3.5 rounded-2xl border border-[var(--border)] bg-[var(--bg2)] text-sm font-bold text-[var(--heading)] outline-none cursor-pointer"
+                    value={newProject.category} onChange={(e) => setNewProject({ ...newProject, category: e.target.value })}
+                  >
+                    {CATEGORIES.filter(c => c !== "All").map(cat => <option key={cat}>{cat}</option>)}
+                  </select>
+                  <button type="submit" disabled={isSubmitting || !newProject.name.trim()} onClick={handleAddProject} className="btn btn-primary px-8 py-3.5 rounded-2xl font-black text-base shadow-lg disabled:opacity-50">
+                    {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <Plus size={20} />}
+                    Launch
+                  </button>
+                </div>
               </div>
+            </div>
+
+            <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2 no-scrollbar">
+              <Filter size={16} className="text-[var(--text-muted)] mr-2 shrink-0" />
+              {CATEGORIES.map(category => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all shrink-0 ${
+                    selectedCategory === category 
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
+                      : 'bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border)] hover:border-indigo-400'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
             </div>
           </header>
 
@@ -213,7 +254,7 @@ const Dashboard = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       key={project.id} 
-                      onClick={() => !editingId && navigate(`/projects/${project.id}`)}
+                      onClick={() => navigate(`/projects/${project.id}`)}
                       className="bg-[var(--surface)] p-6 rounded-3xl border border-[var(--border)] group hover:border-indigo-600 cursor-pointer hover:shadow-xl transition-all"
                     >
                       <div className="flex items-center justify-between mb-6">
@@ -233,9 +274,9 @@ const Dashboard = () => {
                 ) : (
                   <div className="col-span-full">
                     <EmptyState 
-                      icon={searchQuery ? AlertCircle : FolderPlus}
-                      title={searchQuery ? "No results" : "Your space is empty"}
-                      description={searchQuery ? "Try searching for another project name." : "Start your journey by launching a project above."}
+                      icon={searchQuery || selectedCategory !== "All" ? AlertCircle : FolderPlus}
+                      title={searchQuery || selectedCategory !== "All" ? "No results" : "Your space is empty"}
+                      description={searchQuery || selectedCategory !== "All" ? "Try adjusting your filters or search terms." : "Start your journey by launching a project above."}
                     />
                   </div>
                 )}
