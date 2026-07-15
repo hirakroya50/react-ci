@@ -173,7 +173,7 @@ const ProjectDetails = () => {
       );
       setEditingTaskId(null);
       toast.success("Task updated");
-      
+
       // Log task title update
       await supabase.from("activity_logs").insert([
         {
@@ -198,12 +198,14 @@ const ProjectDetails = () => {
     setIsDeletingProject(true);
     try {
       // Log project deletion activity before it's gone
-      await supabase.from("activity_logs").insert([{
-        user_id: user?.id,
-        action: 'deleted',
-        entity_type: 'project',
-        entity_name: project?.name
-      }]);
+      await supabase.from("activity_logs").insert([
+        {
+          user_id: user?.id,
+          action: "deleted",
+          entity_type: "project",
+          entity_name: project?.name,
+        },
+      ]);
 
       const { error } = await supabase.from("projects").delete().eq("id", id);
       if (error) throw error;
@@ -228,19 +230,21 @@ const ProjectDetails = () => {
     );
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] pt-20 md:pt-28 pb-12 px-4 sm:px-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div className="relative min-h-screen overflow-hidden bg-[var(--bg)] px-4 pb-12 pt-24 sm:px-6 md:pt-28">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.14),transparent_66%)]" />
+
+      <div className="relative mx-auto max-w-5xl">
+        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <Link
             to="/dashboard"
-            className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-glass)] px-3.5 py-2 text-sm font-semibold text-[var(--text-muted)] transition-colors hover:text-[var(--accent)]"
           >
             <ChevronLeft size={18} /> Back to Workspace
           </Link>
           <button
             onClick={deleteProject}
             disabled={isDeletingProject}
-            className="w-fit flex items-center gap-2 text-[10px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-red-200 uppercase tracking-wide"
+            className="inline-flex w-fit items-center gap-2 rounded-xl border border-red-300/30 bg-red-500/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-500 transition-colors hover:bg-red-500/15 disabled:opacity-60"
           >
             {isDeletingProject ? (
               <Loader2 size={14} className="animate-spin" />
@@ -251,45 +255,49 @@ const ProjectDetails = () => {
           </button>
         </div>
 
-        <header className="mb-8 p-5 md:p-8 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--bg2)] text-[var(--accent)] uppercase tracking-tight">
+        <header className="mb-8 rounded-[2rem] border border-[var(--border)] bg-[var(--surface-glass)] p-6 shadow-[var(--shadow-sm)] backdrop-blur-xl md:p-8">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="rounded-full border border-indigo-300/25 bg-indigo-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[var(--accent)]">
               {project?.category}
             </span>
           </div>
-          <h1 className="text-2xl md:text-4xl font-bold text-[var(--heading)] mb-2 break-words">
+          <h1 className="mb-2 break-words text-3xl font-black tracking-[-0.03em] text-[var(--heading)] md:text-5xl">
             {project?.name}
           </h1>
-          <p className="text-sm md:text-base text-[var(--text-muted)]">
-            {project?.description || "Focus on the tasks ahead and ship your project."}
+          <p className="max-w-2xl text-sm text-[var(--text-muted)] md:text-base">
+            {project?.description ||
+              "Focus on the tasks ahead and ship your project."}
           </p>
         </header>
 
-        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
-          <div className="p-5 md:p-6 border-b border-[var(--border)] bg-[var(--bg2)]">
+        <div className="overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface-glass)] shadow-[var(--shadow-sm)] backdrop-blur-xl">
+          <div className="border-b border-[var(--border)] bg-[var(--surface-glass-strong)] p-5 md:p-6">
             <form onSubmit={addTask} className="space-y-4">
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <input
                   type="text"
                   placeholder="Add a new task..."
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] outline-none focus:ring-2 focus:ring-[var(--accent)] text-sm"
+                  className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--heading)] outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/25"
                   value={newTask.title}
                   onChange={(e) =>
                     setNewTask({ ...newTask, title: e.target.value })
                   }
                   required
                 />
-                <button type="submit" className="btn btn-primary px-5 h-[42px]">
+                <button
+                  type="submit"
+                  className="inline-flex h-[48px] items-center justify-center rounded-xl bg-linear-to-r from-indigo-500 to-violet-500 px-5 text-white shadow-[0_12px_30px_rgba(99,102,241,0.3)] transition hover:-translate-y-0.5"
+                >
                   <Plus size={20} />
                 </button>
               </div>
-              <div className="flex flex-wrap gap-x-6 gap-y-3 items-center">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+                  <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--text-muted)]">
                     Priority:
                   </span>
                   <select
-                    className="bg-transparent text-xs font-bold text-[var(--heading)] outline-none cursor-pointer"
+                    className="cursor-pointer rounded-lg border border-[var(--border)] bg-[var(--bg2)] px-2.5 py-1.5 text-xs font-bold text-[var(--heading)] outline-none"
                     value={newTask.priority}
                     onChange={(e) =>
                       setNewTask({ ...newTask, priority: e.target.value })
@@ -301,12 +309,12 @@ const ProjectDetails = () => {
                   </select>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+                  <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--text-muted)]">
                     Due Date:
                   </span>
                   <input
                     type="date"
-                    className="bg-transparent text-xs font-bold text-[var(--heading)] outline-none cursor-pointer"
+                    className="cursor-pointer rounded-lg border border-[var(--border)] bg-[var(--bg2)] px-2.5 py-1.5 text-xs font-bold text-[var(--heading)] outline-none"
                     value={newTask.due_date}
                     onChange={(e) =>
                       setNewTask({ ...newTask, due_date: e.target.value })
@@ -317,8 +325,8 @@ const ProjectDetails = () => {
             </form>
           </div>
 
-          <div className="px-5 py-3 border-b border-[var(--border)] flex items-center justify-between bg-[var(--surface)]">
-            <div className="relative flex-1 max-w-xs">
+          <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-5 py-3">
+            <div className="relative max-w-xs flex-1">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
                 size={14}
@@ -326,16 +334,16 @@ const ProjectDetails = () => {
               <input
                 type="text"
                 placeholder="Find tasks..."
-                className="w-full pl-9 pr-4 py-1.5 rounded-lg bg-[var(--bg2)] text-xs outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg2)] py-2 pl-9 pr-4 text-xs text-[var(--heading)] outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-500/25"
                 value={taskSearch}
                 onChange={(e) => setTaskSearch(e.target.value)}
               />
             </div>
             <div className="hidden sm:flex items-center gap-2">
-              <button className="p-1.5 text-[var(--accent)] bg-[var(--bg2)] rounded-md">
+              <button className="rounded-md border border-indigo-300/25 bg-indigo-500/10 p-1.5 text-[var(--accent)]">
                 <List size={14} />
               </button>
-              <button className="p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg2)] rounded-md">
+              <button className="rounded-md border border-[var(--border)] p-1.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--bg2)]">
                 <LayoutGrid size={14} />
               </button>
             </div>

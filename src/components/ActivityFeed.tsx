@@ -38,24 +38,24 @@ const ActivityFeed = ({ activities }: { activities: Activity[] }) => {
   return (
     <div className="space-y-4">
       {activities.length === 0 ? (
-        <p className="text-xs text-[var(--text-muted)] italic">
+        <p className="rounded-2xl border border-white/6 bg-white/[0.02] px-4 py-5 text-sm italic text-(--text-muted)">
           No recent activity.
         </p>
       ) : (
         activities.map((activity) => (
-          <div key={activity.id} className="flex items-start gap-3 group">
-            <div className="mt-0.5 p-1.5 rounded-full bg-[var(--bg2)] group-hover:bg-[var(--surface)] border border-[var(--border)] transition-colors">
+          <div key={activity.id} className="group flex items-start gap-4 rounded-2xl border border-white/6 bg-white/[0.02] p-3 transition-colors hover:bg-white/[0.04]">
+            <div className="mt-0.5 rounded-2xl border border-white/8 bg-(--surface-glass-strong) p-2.5 text-(--heading) shadow-sm transition-transform group-hover:scale-105">
               {getIcon(activity.action, activity.entity_type)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-[var(--heading)] leading-snug">
+              <p className="text-sm leading-snug text-(--heading)">
                 <span className="font-bold capitalize">{activity.action}</span>{" "}
                 {activity.entity_type}{" "}
-                <span className="font-medium text-[var(--accent)] truncate block md:inline">
+                <span className="block truncate font-medium text-(--accent) md:inline">
                   "{activity.entity_name}"
                 </span>
               </p>
-              <div className="flex items-center gap-1 mt-0.5 text-[10px] text-[var(--text-muted)]">
+              <div className="mt-1.5 flex items-center gap-1 text-[10px] text-(--text-muted)">
                 <Clock size={10} />
                 {formatTime(activity.created_at)}
               </div>

@@ -15,18 +15,28 @@
   display: flex;
   align-items: center;
   background: transparent;
+  padding: 8px clamp(12px, 3vw, 32px);
 }
 .navbar.scrolled {
-  background: var(--nav-blur);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
 }
 
 .nav-inner {
   width: 100%;
+  min-height: 56px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  transition: background-color .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+
+.navbar.scrolled .nav-inner {
+  background: var(--nav-blur);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ─── Shared Buttons ─────────────────────────────── */
@@ -173,6 +183,14 @@
 
 /* ─── Responsive ─────────────────────────────── */
 @media (max-width: 768px) {
+  .navbar {
+    padding: 8px 10px;
+  }
+
+  .nav-inner {
+    padding: 0 10px;
+  }
+
   .hero-cta { flex-direction: column; }
   .mock-body { padding: 20px; }
   .mock-bar-group { height: 80px; }
