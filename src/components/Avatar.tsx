@@ -1,11 +1,12 @@
 interface AvatarProps {
   name?: string;
   email?: string;
-  size?: "sm" | "md" | "lg";
+  url?: string | null;
+  size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
 
-const Avatar = ({ name, email, size = "md", className = "" }: AvatarProps) => {
+const Avatar = ({ name, email, url, size = "md", className = "" }: AvatarProps) => {
   const getInitials = () => {
     if (name) {
       return name
@@ -25,7 +26,18 @@ const Avatar = ({ name, email, size = "md", className = "" }: AvatarProps) => {
     sm: "w-8 h-8 text-xs",
     md: "w-10 h-10 text-sm",
     lg: "w-16 h-16 text-xl",
+    xl: "w-28 h-28 text-3xl",
   };
+
+  if (url) {
+    return (
+      <img
+        src={url}
+        alt={name || "Avatar"}
+        className={`${sizes[size]} rounded-full object-cover shadow-sm border border-[var(--border)] ${className}`}
+      />
+    );
+  }
 
   return (
     <div

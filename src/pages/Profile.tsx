@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../components/AuthProvider';
-import { Save, Loader2, User as UserIcon, Shield, Mail, Calendar } from 'lucide-react';
+import { Save, Loader2, User as UserIcon, Shield, Mail, Calendar, Camera, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Avatar from '../components/Avatar';
 import { motion } from 'framer-motion';
@@ -10,9 +10,11 @@ const Profile = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [profile, setProfile] = useState({
     first_name: '',
     last_name: '',
+    avatar_url: '',
   });
 
   useEffect(() => {
@@ -20,7 +22,7 @@ const Profile = () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('first_name, last_name')
+          .select('first_name, last_name, avatar_url')
           .eq('id', user?.id)
           .single();
 
@@ -28,6 +30,7 @@ const Profile = () => {
         if (data) setProfile({
           first_name: data.first_name || '',
           last_name: data.last_name || '',
+          avatar_url: data.avatar_url || '',
         });
       } catch (error: any) {
         toast.error('Error loading profile');
@@ -61,6 +64,45 @@ const Profile = () => {
     }
   };
 
+  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error('You must select an image to upload.');
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user?.id}-${Math.random()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
+      
+      // Auto-save the avatar URL to the profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user?.id);
+
+      if (updateError) throw updateError;
+      
+      toast.success('Avatar uploaded!');
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
@@ -90,10 +132,20 @@ const Profile = () => {
                 <Avatar 
                   name={fullName} 
                   email={user?.email} 
-                  size="lg" 
-                  className="w-28 h-28 text-3xl shadow-xl shadow-indigo-500/10"
+                  url={profile.avatar_url}
+                  size="xl" 
+                  className="shadow-xl shadow-indigo-500/10"
                 />
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-[var(--surface)] rounded-full" />
+                <label className="absolute -bottom-2 -right-2 p-2 bg-indigo-600 text-white rounded-xl shadow-lg cursor-pointer hover:scale-110 transition-transform">
+                  {uploading ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={uploadAvatar}
+                    disabled={uploading}
+                  />
+                </label>
               </div>
               <h2 className="text-xl font-bold text-[var(--heading)] truncate px-2">
                 {fullName || 'Nexus Member'}
