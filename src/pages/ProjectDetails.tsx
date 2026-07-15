@@ -210,19 +210,19 @@ const ProjectDetails = () => {
     );
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] pt-24 pb-12 px-4">
+    <div className="min-h-screen bg-[var(--bg)] pt-20 md:pt-28 pb-12 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <Link
             to="/dashboard"
-            className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
           >
             <ChevronLeft size={18} /> Back to Workspace
           </Link>
           <button
             onClick={deleteProject}
             disabled={isDeletingProject}
-            className="flex items-center gap-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 py-1.5 rounded-lg transition-colors"
+            className="w-fit flex items-center gap-2 text-[10px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-red-200 uppercase tracking-wide"
           >
             {isDeletingProject ? (
               <Loader2 size={14} className="animate-spin" />
@@ -233,45 +233,45 @@ const ProjectDetails = () => {
           </button>
         </div>
 
-        <header className="mb-8 p-6 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
+        <header className="mb-8 p-5 md:p-8 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--bg2)] text-[var(--accent)] uppercase tracking-tight">
               {project?.category}
             </span>
           </div>
-          <h1 className="text-3xl font-bold text-[var(--heading)]">
+          <h1 className="text-2xl md:text-4xl font-bold text-[var(--heading)] mb-2 break-words">
             {project?.name}
           </h1>
-          <p className="text-[var(--text-muted)] mt-1">
-            {project?.description || "Focus on the tasks ahead."}
+          <p className="text-sm md:text-base text-[var(--text-muted)]">
+            {project?.description || "Focus on the tasks ahead and ship your project."}
           </p>
         </header>
 
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-[var(--border)] bg-[var(--bg2)]">
+          <div className="p-5 md:p-6 border-b border-[var(--border)] bg-[var(--bg2)]">
             <form onSubmit={addTask} className="space-y-4">
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="What needs to be done?"
-                  className="flex-1 px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                  placeholder="Add a new task..."
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] outline-none focus:ring-2 focus:ring-[var(--accent)] text-sm"
                   value={newTask.title}
                   onChange={(e) =>
                     setNewTask({ ...newTask, title: e.target.value })
                   }
                   required
                 />
-                <button type="submit" className="btn btn-primary px-6">
-                  <Plus size={18} />
+                <button type="submit" className="btn btn-primary px-5 h-[42px]">
+                  <Plus size={20} />
                 </button>
               </div>
-              <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex flex-wrap gap-x-6 gap-y-3 items-center">
                 <div className="flex items-center gap-2">
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase">
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
                     Priority:
-                  </label>
+                  </span>
                   <select
-                    className="bg-transparent text-xs font-medium text-[var(--heading)] outline-none border-b border-[var(--border)]"
+                    className="bg-transparent text-xs font-bold text-[var(--heading)] outline-none cursor-pointer"
                     value={newTask.priority}
                     onChange={(e) =>
                       setNewTask({ ...newTask, priority: e.target.value })
@@ -283,12 +283,12 @@ const ProjectDetails = () => {
                   </select>
                 </div>
                 <div className="flex items-center gap-2">
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase">
-                    Due:
-                  </label>
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+                    Due Date:
+                  </span>
                   <input
                     type="date"
-                    className="bg-transparent text-xs font-medium text-[var(--heading)] outline-none"
+                    className="bg-transparent text-xs font-bold text-[var(--heading)] outline-none cursor-pointer"
                     value={newTask.due_date}
                     onChange={(e) =>
                       setNewTask({ ...newTask, due_date: e.target.value })
@@ -299,7 +299,7 @@ const ProjectDetails = () => {
             </form>
           </div>
 
-          <div className="px-6 py-3 border-b border-[var(--border)] flex items-center justify-between">
+          <div className="px-5 py-3 border-b border-[var(--border)] flex items-center justify-between bg-[var(--surface)]">
             <div className="relative flex-1 max-w-xs">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
@@ -307,13 +307,13 @@ const ProjectDetails = () => {
               />
               <input
                 type="text"
-                placeholder="Filter tasks..."
-                className="w-full pl-10 pr-4 py-1.5 rounded-lg bg-[var(--bg2)] text-xs outline-none"
+                placeholder="Find tasks..."
+                className="w-full pl-9 pr-4 py-1.5 rounded-lg bg-[var(--bg2)] text-xs outline-none focus:ring-1 focus:ring-[var(--accent)]"
                 value={taskSearch}
                 onChange={(e) => setTaskSearch(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2">
               <button className="p-1.5 text-[var(--accent)] bg-[var(--bg2)] rounded-md">
                 <List size={14} />
               </button>
@@ -348,14 +348,14 @@ const ProjectDetails = () => {
                   </motion.div>
                 ))
               ) : (
-                <div className="p-8">
+                <div className="p-12">
                   <EmptyState
                     icon={taskSearch ? AlertCircle : ClipboardList}
-                    title={taskSearch ? "No tasks found" : "No tasks yet"}
+                    title={taskSearch ? "No tasks match" : "Empty list"}
                     description={
                       taskSearch
-                        ? "Try a different search term or clear filters."
-                        : "Start by adding a task using the form above."
+                        ? "Try clearing your filters or searching for something else."
+                        : "Ready to get things done? Add your first task above."
                     }
                   />
                 </div>
