@@ -10,7 +10,6 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import ProjectDetails from "./pages/ProjectDetails";
-import "./App.css";
 
 function App() {
   return (
