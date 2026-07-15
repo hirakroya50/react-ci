@@ -121,12 +121,12 @@ const Profile = () => {
   const fullName = `${profile.first_name} ${profile.last_name}`.trim();
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[var(--bg)] px-4 pb-12 pt-24 sm:px-6 md:pt-28">
+    <div className="relative min-h-screen overflow-hidden bg-[var(--bg)]! px-4! pb-12! pt-24! sm:px-6! md:pt-28!">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.16),transparent_68%)]" />
       <div className="pointer-events-none absolute right-10 top-40 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl" />
 
-      <div className="relative mx-auto flex max-w-6xl flex-col gap-10">
-        <header className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface-glass)] px-6 py-7 shadow-[var(--shadow-sm)] backdrop-blur-xl sm:px-8">
+      <div className="relative mx-auto flex max-w-6xl! flex-col gap-10!">
+        <header className="rounded-[2rem]! border! border-[var(--border)]! bg-[var(--surface-glass)]! px-6! py-7! shadow-[var(--shadow-sm)]! backdrop-blur-xl! sm:px-8!">
           <span className="inline-flex rounded-full border border-indigo-400/25 bg-indigo-500/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-indigo-400">
             Account
           </span>
@@ -138,13 +138,13 @@ const Profile = () => {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 xl:gap-8">
+        <div className="grid grid-cols-1 gap-6! lg:grid-cols-12! xl:gap-8!">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-4"
+            className="lg:col-span-4!"
           >
-            <div className="sticky top-28 rounded-[2rem] border border-[var(--border)] bg-[var(--surface-glass)] p-6 text-center shadow-[var(--shadow-sm)] backdrop-blur-xl sm:p-8">
+            <div className="sticky top-28! rounded-[2rem]! border! border-[var(--border)]! bg-[var(--surface-glass)]! p-6! text-center shadow-[var(--shadow-sm)]! backdrop-blur-xl! sm:p-8!">
               <div className="relative mb-6 inline-block">
                 <Avatar
                   name={fullName}
@@ -153,7 +153,7 @@ const Profile = () => {
                   size="xl"
                   className="shadow-xl shadow-indigo-500/15"
                 />
-                <label className="absolute -bottom-2 -right-2 rounded-xl border border-indigo-300/30 bg-indigo-600 p-2 text-white shadow-lg transition-transform hover:scale-105 cursor-pointer">
+                <label className="absolute -bottom-2 -right-2 rounded-xl! border! border-indigo-300/30! bg-indigo-600! p-2! text-white shadow-lg! transition-transform hover:scale-105! cursor-pointer">
                   {uploading ? (
                     <Loader2 size={16} className="animate-spin" />
                   ) : (
@@ -174,12 +174,12 @@ const Profile = () => {
               </h2>
               <p className="mb-8 mt-2 truncate text-sm text-[var(--text-muted)]">{user?.email}</p>
 
-              <div className="space-y-3 border-t border-[var(--border)] pt-5 text-left text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-glass-strong)] px-3 py-2.5">
+              <div className="space-y-3! border-t border-[var(--border)]! pt-5! text-left text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]!">
+                <div className="flex items-center gap-3! rounded-xl! border! border-[var(--border)]! bg-[var(--surface-glass-strong)]! px-3! py-2.5!">
                   <Shield size={15} className="text-indigo-500" />
                   Verified account
                 </div>
-                <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-glass-strong)] px-3 py-2.5">
+                <div className="flex items-center gap-3! rounded-xl! border! border-[var(--border)]! bg-[var(--surface-glass-strong)]! px-3! py-2.5!">
                   <Calendar size={15} className="text-indigo-500" />
                   Member since 2024
                 </div>
@@ -190,9 +190,9 @@ const Profile = () => {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-8"
+            className="lg:col-span-8!"
           >
-            <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface-glass)] p-6 shadow-[var(--shadow-sm)] backdrop-blur-xl sm:p-8 md:p-10">
+            <div className="rounded-[2rem]! border! border-[var(--border)]! bg-[var(--surface-glass)]! p-6! shadow-[var(--shadow-sm)]! backdrop-blur-xl! sm:p-8! md:p-10!">
               <div className="mb-8 flex items-center gap-3">
                 <div className="rounded-xl border border-indigo-300/25 bg-indigo-500/10 p-2.5">
                   <UserIcon size={20} className="text-[var(--accent)]" />
@@ -202,15 +202,15 @@ const Profile = () => {
                 </h3>
               </div>
 
-              <form onSubmit={handleUpdate} className="space-y-8">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <form onSubmit={handleUpdate} className="space-y-8!">
+                <div className="grid grid-cols-1 gap-6! md:grid-cols-2!">
                   <div className="space-y-2.5">
                     <label className="ml-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--text-muted)]">
                       First Name
                     </label>
                     <input
                       type="text"
-                      className="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-5 py-3.5 text-base font-medium text-[var(--heading)] outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30"
+                      className="w-full rounded-2xl! border! border-[var(--border)]! bg-[var(--surface)]! px-5! py-3.5! text-base font-medium text-[var(--heading)]! outline-none transition-all focus:border-indigo-400! focus:ring-2! focus:ring-indigo-500/30!"
                       value={profile.first_name}
                       onChange={(e) =>
                         setProfile({ ...profile, first_name: e.target.value })
@@ -225,7 +225,7 @@ const Profile = () => {
                     </label>
                     <input
                       type="text"
-                      className="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-5 py-3.5 text-base font-medium text-[var(--heading)] outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30"
+                      className="w-full rounded-2xl! border! border-[var(--border)]! bg-[var(--surface)]! px-5! py-3.5! text-base font-medium text-[var(--heading)]! outline-none transition-all focus:border-indigo-400! focus:ring-2! focus:ring-indigo-500/30!"
                       value={profile.last_name}
                       onChange={(e) =>
                         setProfile({ ...profile, last_name: e.target.value })
@@ -247,7 +247,7 @@ const Profile = () => {
                     <input
                       type="email"
                       disabled
-                      className="w-full cursor-not-allowed rounded-2xl border border-[var(--border)] bg-[var(--bg2)] py-3.5 pl-12 pr-5 text-base font-medium text-[var(--heading)] opacity-70"
+                      className="w-full cursor-not-allowed rounded-2xl! border! border-[var(--border)]! bg-[var(--bg2)]! py-3.5! pl-12! pr-5! text-base font-medium text-[var(--heading)]! opacity-70!"
                       value={user?.email || ""}
                     />
                   </div>
@@ -256,11 +256,11 @@ const Profile = () => {
                   </p>
                 </div>
 
-                <div className="border-t border-[var(--border)] pt-5">
+                <div className="border-t border-[var(--border)]! pt-5!">
                   <button
                     type="submit"
                     disabled={updating}
-                    className="inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-indigo-500 to-violet-500 px-6 text-base font-black text-white shadow-[0_16px_36px_rgba(99,102,241,0.28)] transition hover:-translate-y-0.5 disabled:opacity-60 md:w-auto"
+                    className="inline-flex h-[52px]! w-full! items-center justify-center gap-2! rounded-2xl! bg-linear-to-r! from-indigo-500! to-violet-500! px-6! text-base font-black text-white shadow-[0_16px_36px_rgba(99,102,241,0.28)]! transition hover:-translate-y-0.5! disabled:opacity-60! md:w-auto!"
                   >
                     {updating ? (
                       <Loader2 className="animate-spin" size={20} />

@@ -33,9 +33,11 @@
 ### Task 1: Add shared premium-glass theme tokens
 
 **Files:**
+
 - Modify: `src/index.css`
 
 **Interfaces:**
+
 - Consumes: Existing CSS variable system on `:root` and `[data-theme="dark"]`
 - Produces: New reusable variables for elevated glass surfaces and ambient glow used by the dashboard classes
 
@@ -69,9 +71,11 @@ Expected: Build succeeds without CSS parsing errors
 ### Task 2: Rebuild the dashboard shell and section hierarchy
 
 **Files:**
+
 - Modify: `src/pages/Dashboard.tsx`
 
 **Interfaces:**
+
 - Consumes: Existing `projects`, `focusTasks`, `globalStats`, `searchQuery`, `selectedCategory`, `newProject`, `handleAddProject`, and `navigate`
 - Produces: New page structure with hero shell, summary row, composer, filter toolbar, and richer project grid while preserving the same behaviors and handlers
 
@@ -129,10 +133,12 @@ onClick={() => navigate(`/projects/${project.id}`)}
 ### Task 3: Align supporting components to the new surface language
 
 **Files:**
+
 - Modify: `src/components/ActivityFeed.tsx`
 - Modify: `src/components/ProjectPulse.tsx`
 
 **Interfaces:**
+
 - Consumes: Existing activity item props and `ProjectPulse` props
 - Produces: Matching spacing, text hierarchy, and progress styling without any API changes
 
@@ -156,12 +162,14 @@ onClick={() => navigate(`/projects/${project.id}`)}
 ### Task 4: Validate the redesign without changing functionality
 
 **Files:**
+
 - Modify: `src/pages/Dashboard.tsx`
 - Modify: `src/components/ActivityFeed.tsx`
 - Modify: `src/components/ProjectPulse.tsx`
 - Modify: `src/index.css`
 
 **Interfaces:**
+
 - Consumes: Final UI changes from prior tasks
 - Produces: Verified visual refactor with unchanged interactions
 
