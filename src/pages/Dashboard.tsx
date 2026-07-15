@@ -1,7 +1,10 @@
+"use client";
+
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../components/AuthProvider';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Project {
@@ -14,6 +17,7 @@ interface Project {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,7 +69,8 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteProject = async (id: string) => {
+  const handleDeleteProject = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
     try {
       const { error } = await supabase
         .from('projects')
@@ -135,23 +140,27 @@ const Dashboard = () => {
               projects.map((project) => (
                 <div 
                   key={project.id}
-                  className="bg-[var(--surface)] p-5 rounded-xl border border-[var(--border)] flex items-center justify-between group hover:border-[var(--accent)] transition-colors"
+                  onClick={() => navigate(`/projects/${project.id}`)}
+                  className="bg-[var(--surface)] p-5 rounded-xl border border-[var(--border)] flex items-center justify-between group hover:border-[var(--accent)] transition-all cursor-pointer hover:shadow-md"
                 >
                   <div>
-                    <h3 className="font-semibold text-[var(--heading)]">{project.name}</h3>
+                    <h3 className="font-semibold text-[var(--heading)] group-hover:text-[var(--accent)] transition-colors">{project.name}</h3>
                     {project.description && <p className="text-sm text-[var(--text-muted)]">{project.description}</p>}
-                    <span className="text-[10px] uppercase font-bold text-[var(--accent)] mt-2 inline-block">
-                      {new Date(project.created_at).toLocaleDateString()}
+                    <span className="text-[10px] uppercase font-bold text-[var(--text-muted)] mt-2 inline-block">
+                      Created {new Date(project.created_at).toLocaleDateString()}
                     </span>
                   </div>
                   <div className="flex gap-2">
                     <button 
-                      onClick={() => handleDeleteProject(project.id)}
+                      onClick={(e) => handleDeleteProject(e, project.id)}
                       className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                       title="Delete"
                     >
                       <Trash2 size={18} />
                     </button>
+                    <div className="p-2 text-[var(--text-muted)]">
+                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    </div>
                   </div>
                 </div>
               ))

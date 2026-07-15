@@ -1,5 +1,8 @@
+"use client";
+
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../components/AuthProvider'
 
 const features = [
   { icon: '⚡', title: 'Lightning Fast', desc: 'Optimized performance with instant load times and smooth animations out of the box.' },
@@ -24,6 +27,8 @@ const testimonials = [
 ]
 
 function Index() {
+  const { session } = useAuth();
+
   return (
     <div className="app">
       {/* Hero */}
@@ -40,7 +45,11 @@ function Index() {
             collaborate in real-time, and deploy with confidence.
           </p>
           <div className="hero-cta">
-            <Link to="/login" className="btn btn-primary btn-lg">Start for free →</Link>
+            {session ? (
+              <Link to="/dashboard" className="btn btn-primary btn-lg">Go to Dashboard →</Link>
+            ) : (
+              <Link to="/login" className="btn btn-primary btn-lg">Start for free →</Link>
+            )}
             <a href="#" className="btn btn-outline btn-lg">Watch demo</a>
           </div>
           <p className="hero-note">No credit card required · 14-day free trial</p>

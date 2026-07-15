@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
@@ -8,6 +10,7 @@ import Index from './pages/Index'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
+import ProjectDetails from './pages/ProjectDetails'
 import './App.css'
 
 function App() {
@@ -32,6 +35,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/projects/:id" 
+            element={
+              <ProtectedRoute>
+                <ProjectDetails />
               </ProtectedRoute>
             } 
           />
