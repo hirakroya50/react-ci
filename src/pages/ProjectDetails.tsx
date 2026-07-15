@@ -5,10 +5,10 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../components/AuthProvider';
 import { 
-  ChevronLeft, Plus, CheckCircle2, Circle, Trash2, 
-  Loader2, Calendar, Settings, X, Save, Edit2, Search 
+  ChevronLeft, Plus, Loader2, Settings, X, Save, Search, ArrowUpDown 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import TaskItem from '../components/TaskItem';
 
 interface Project {
   id: string;
@@ -43,6 +43,7 @@ const ProjectDetails = () => {
   const [isAdding, setIsAdding] = useState(false);
   
   const [taskSearch, setTaskSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'created' | 'priority' | 'due'>('created');
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTaskTitle, setEditingTaskTitle] = useState('');
   
@@ -64,8 +65,7 @@ const ProjectDetails = () => {
         const { data: tasksData, error: tasksError } = await supabase
           .from('tasks')
           .select('*')
-          .eq('project_id', id)
-          .order('created_at', { ascending: true });
+          .eq('project_id', id);
 
         if (tasksError) throw tasksError;
         setTasks(tasksData || []);
@@ -141,9 +141,19 @@ const ProjectDetails = () => {
     }
   };
 
-  const handleEditTask = (task: Task) => {
-    setEditingTaskId(task.id);
-    setEditingTaskTitle(task.title);
+  const deleteTask = async (taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+
+      if (error) throw error;
+      setTasks(tasks.filter(t => t.id !== taskId));
+      toast.success('Task removed');
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   const saveTaskEdit = async (taskId: string) => {
@@ -163,39 +173,28 @@ const ProjectDetails = () => {
     }
   };
 
-  const deleteTask = async (taskId: string) => {
-    try {
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', taskId);
-
-      if (error) throw error;
-      setTasks(tasks.filter(t => t.id !== taskId));
-      toast.success('Task removed');
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'High': return 'text-red-500 bg-red-50 dark:bg-red-950/20';
-      case 'Medium': return 'text-amber-500 bg-amber-50 dark:bg-amber-950/20';
-      case 'Low': return 'text-blue-500 bg-blue-50 dark:bg-blue-950/20';
-      default: return 'text-gray-500 bg-gray-50 dark:bg-gray-800';
-    }
-  };
-
-  const filteredTasks = useMemo(() => {
-    return tasks.filter(t => {
+  const sortedAndFilteredTasks = useMemo(() => {
+    let result = tasks.filter(t => {
       const matchesFilter = filter === 'all' || 
         (filter === 'active' && !t.is_completed) || 
         (filter === 'completed' && t.is_completed);
       const matchesSearch = t.title.toLowerCase().includes(taskSearch.toLowerCase());
       return matchesFilter && matchesSearch;
     });
-  }, [tasks, filter, taskSearch]);
+
+    return result.sort((a, b) => {
+      if (sortBy === 'priority') {
+        const pMap: Record<string, number> = { 'High': 3, 'Medium': 2, 'Low': 1 };
+        return pMap[b.priority] - pMap[a.priority];
+      }
+      if (sortBy === 'due') {
+        if (!a.due_date) return 1;
+        if (!b.due_date) return -1;
+        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+      }
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    });
+  }, [tasks, filter, taskSearch, sortBy]);
 
   if (loading) {
     return (
@@ -232,11 +231,9 @@ const ProjectDetails = () => {
               />
               <div className="flex gap-2">
                 <button onClick={handleUpdateProject} className="btn btn-primary flex items-center gap-2 py-1.5 px-4 text-sm">
-                  <Save size={16} /> Save Changes
+                  <Save size={16} /> Save
                 </button>
-                <button onClick={() => setIsEditingProject(false)} className="btn btn-ghost flex items-center gap-2 py-1.5 px-4 text-sm">
-                  <X size={16} /> Cancel
-                </button>
+                <button onClick={() => setIsEditingProject(false)} className="btn btn-ghost py-1.5 px-4 text-sm">Cancel</button>
               </div>
             </div>
           ) : (
@@ -270,7 +267,7 @@ const ProjectDetails = () => {
                 <input
                   type="text"
                   placeholder="What needs to be done?"
-                  className="flex-1 px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--heading)] focus:ring-2 focus:ring-[var(--accent)] outline-none"
+                  className="flex-1 px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--heading)] outline-none focus:ring-2 focus:ring-[var(--accent)]"
                   value={newTask}
                   onChange={(e) => setNewTask(e.target.value)}
                   required
@@ -289,9 +286,7 @@ const ProjectDetails = () => {
                         type="button"
                         onClick={() => setNewPriority(p)}
                         className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
-                          newPriority === p 
-                          ? 'bg-[var(--accent)] text-white' 
-                          : 'bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border)]'
+                          newPriority === p ? 'bg-[var(--accent)] text-white' : 'bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border)]'
                         }`}
                       >
                         {p}
@@ -300,10 +295,10 @@ const ProjectDetails = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Due Date</span>
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Due</span>
                   <input
                     type="date"
-                    className="px-2 py-1 rounded-md text-[10px] font-medium border border-[var(--border)] bg-[var(--surface)] text-[var(--heading)] focus:ring-1 focus:ring-[var(--accent)] outline-none"
+                    className="px-2 py-1 rounded-md text-[10px] border border-[var(--border)] bg-[var(--surface)]"
                     value={newDueDate}
                     onChange={(e) => setNewDueDate(e.target.value)}
                   />
@@ -326,94 +321,46 @@ const ProjectDetails = () => {
                 </button>
               ))}
             </div>
-            <div className="relative w-full sm:w-48">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={14} />
-              <input 
-                type="text"
-                placeholder="Search tasks..."
-                className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg2)] text-xs outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                value={taskSearch}
-                onChange={(e) => setTaskSearch(e.target.value)}
-              />
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={14} />
+                <input 
+                  type="text"
+                  placeholder="Filter..."
+                  className="pl-9 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg2)] text-xs outline-none focus:ring-1 focus:ring-[var(--accent)] w-32 md:w-40"
+                  value={taskSearch}
+                  onChange={(e) => setTaskSearch(e.target.value)}
+                />
+              </div>
+              <select 
+                className="bg-[var(--bg2)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-xs font-bold outline-none cursor-pointer"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+              >
+                <option value="created">Sort: Newest</option>
+                <option value="priority">Sort: Priority</option>
+                <option value="due">Sort: Due Date</option>
+              </select>
             </div>
           </div>
 
           <div className="divide-y divide-[var(--border)]">
-            {filteredTasks.length === 0 ? (
-              <div className="p-12 text-center text-[var(--text-muted)]">
-                {tasks.length === 0 ? "No tasks yet. Create one above!" : "No matches found."}
-              </div>
+            {sortedAndFilteredTasks.length === 0 ? (
+              <div className="p-12 text-center text-[var(--text-muted)]">No tasks found.</div>
             ) : (
-              filteredTasks.map((task) => (
-                <div key={task.id} className="p-4 flex items-center justify-between group hover:bg-[var(--bg2)] transition-colors">
-                  <div className="flex items-center gap-3 flex-1">
-                    <button 
-                      onClick={() => toggleTask(task.id, task.is_completed)}
-                      className="transition-transform active:scale-90"
-                    >
-                      {task.is_completed ? (
-                        <CheckCircle2 className="text-green-500" size={20} />
-                      ) : (
-                        <Circle className="text-[var(--text-muted)]" size={20} />
-                      )}
-                    </button>
-                    
-                    {editingTaskId === task.id ? (
-                      <div className="flex items-center gap-2 flex-1">
-                        <input 
-                          autoFocus
-                          className="flex-1 bg-[var(--surface)] border border-[var(--border)] rounded px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                          value={editingTaskTitle}
-                          onChange={(e) => setEditingTaskTitle(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') saveTaskEdit(task.id);
-                            if (e.key === 'Escape') setEditingTaskId(null);
-                          }}
-                        />
-                        <button onClick={() => saveTaskEdit(task.id)} className="p-1 text-green-500 hover:bg-green-50 rounded">
-                          <CheckCircle2 size={16} />
-                        </button>
-                        <button onClick={() => setEditingTaskId(null)} className="p-1 text-red-500 hover:bg-red-50 rounded">
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col flex-1" onClick={() => handleEditTask(task)}>
-                        <span className={`cursor-pointer ${task.is_completed ? 'line-through text-[var(--text-muted)]' : 'text-[var(--heading)]'}`}>
-                          {task.title}
-                        </span>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`text-[9px] w-fit px-1.5 py-0.5 rounded uppercase font-bold ${getPriorityColor(task.priority)}`}>
-                            {task.priority}
-                          </span>
-                          {task.due_date && (
-                            <span className="flex items-center gap-1 text-[9px] font-bold text-[var(--text-muted)]">
-                              <Calendar size={10} />
-                              {new Date(task.due_date).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    <button
-                      onClick={() => handleEditTask(task)}
-                      className="p-2 text-[var(--text-muted)] hover:text-[var(--accent)] rounded-lg hover:bg-[var(--surface)]"
-                      title="Edit Task"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => deleteTask(task.id)}
-                      className="p-2 text-[var(--text-muted)] hover:text-red-500 rounded-lg hover:bg-[var(--surface)]"
-                      title="Delete Task"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
+              sortedAndFilteredTasks.map((task) => (
+                <TaskItem 
+                  key={task.id}
+                  task={task}
+                  onToggle={toggleTask}
+                  onDelete={deleteTask}
+                  onEdit={(t) => { setEditingTaskId(t.id); setEditingTaskTitle(t.title); }}
+                  isEditing={editingTaskId === task.id}
+                  editTitle={editingTaskTitle}
+                  onEditChange={setEditingTaskTitle}
+                  onSave={saveTaskEdit}
+                  onCancel={() => setEditingTaskId(null)}
+                />
               ))
             )}
           </div>

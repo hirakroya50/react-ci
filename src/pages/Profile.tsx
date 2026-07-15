@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../components/AuthProvider';
-import { User, Save, Loader2 } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Avatar from '../components/Avatar';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -67,6 +68,8 @@ const Profile = () => {
     );
   }
 
+  const fullName = `${profile.first_name} ${profile.last_name}`.trim();
+
   return (
     <div className="min-h-screen bg-[var(--bg)] pt-24 pb-12 px-4">
       <div className="max-w-2xl mx-auto">
@@ -76,13 +79,15 @@ const Profile = () => {
         </header>
 
         <div className="bg-[var(--surface)] p-8 rounded-2xl border border-[var(--border)] shadow-sm">
-          <div className="flex items-center gap-4 mb-8 pb-8 border-bottom border-[var(--border)]">
-            <div className="w-16 h-16 rounded-full bg-[var(--accent-glow)] flex items-center justify-center text-[var(--accent)] text-2xl font-bold">
-              {profile.first_name?.[0] || user?.email?.[0].toUpperCase()}
-            </div>
+          <div className="flex items-center gap-4 mb-8 pb-8 border-b border-[var(--border)]">
+            <Avatar 
+              name={fullName} 
+              email={user?.email} 
+              size="lg" 
+            />
             <div>
-              <p className="text-[var(--heading)] font-semibold">{user?.email}</p>
-              <p className="text-sm text-[var(--text-muted)]">Signed in via Supabase</p>
+              <p className="text-[var(--heading)] font-semibold text-lg">{fullName || user?.email}</p>
+              <p className="text-sm text-[var(--text-muted)]">{user?.email}</p>
             </div>
           </div>
 
@@ -92,7 +97,7 @@ const Profile = () => {
                 <label className="text-sm font-medium text-[var(--heading)]">First Name</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg2)] text-[var(--heading)] focus:ring-2 focus:ring-[var(--accent)] outline-none"
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg2)] text-[var(--heading)] outline-none focus:ring-2 focus:ring-[var(--accent)]"
                   value={profile.first_name}
                   onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
                 />
@@ -101,7 +106,7 @@ const Profile = () => {
                 <label className="text-sm font-medium text-[var(--heading)]">Last Name</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg2)] text-[var(--heading)] focus:ring-2 focus:ring-[var(--accent)] outline-none"
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg2)] text-[var(--heading)] outline-none focus:ring-2 focus:ring-[var(--accent)]"
                   value={profile.last_name}
                   onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
                 />
