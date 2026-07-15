@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../components/AuthProvider';
-import { ChevronLeft, Plus, CheckCircle2, Circle, Trash2, Loader2, Calendar, Filter } from 'lucide-react';
+import { ChevronLeft, Plus, CheckCircle2, Circle, Trash2, Loader2, Calendar, Settings, X, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Project {
@@ -31,6 +31,9 @@ const ProjectDetails = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditingProject, setIsEditingProject] = useState(false);
+  const [editedProject, setEditedProject] = useState({ name: '', description: '' });
+  
   const [newTask, setNewTask] = useState('');
   const [newPriority, setNewPriority] = useState('Medium');
   const [newDueDate, setNewDueDate] = useState('');
@@ -48,6 +51,7 @@ const ProjectDetails = () => {
 
         if (projectError) throw projectError;
         setProject(projectData);
+        setEditedProject({ name: projectData.name, description: projectData.description || '' });
 
         const { data: tasksData, error: tasksError } = await supabase
           .from('tasks')
@@ -67,6 +71,22 @@ const ProjectDetails = () => {
 
     fetchData();
   }, [id, navigate]);
+
+  const handleUpdateProject = async () => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ name: editedProject.name, description: editedProject.description })
+        .eq('id', id);
+
+      if (error) throw error;
+      setProject({ ...project!, ...editedProject });
+      setIsEditingProject(false);
+      toast.success('Project updated');
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
 
   const addTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,7 +127,6 @@ const ProjectDetails = () => {
         .eq('id', taskId);
 
       if (error) throw error;
-
       setTasks(tasks.map(t => t.id === taskId ? { ...t, is_completed: !currentStatus } : t));
     } catch (error: any) {
       toast.error(error.message);
@@ -122,7 +141,6 @@ const ProjectDetails = () => {
         .eq('id', taskId);
 
       if (error) throw error;
-
       setTasks(tasks.filter(t => t.id !== taskId));
       toast.success('Task removed');
     } catch (error: any) {
@@ -164,25 +182,51 @@ const ProjectDetails = () => {
           Back to Dashboard
         </Link>
 
-        <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-[var(--heading)]">{project?.name}</h1>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${project?.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                {project?.status}
-              </span>
-            </div>
-            <p className="text-[var(--text-muted)]">{project?.description || 'No description provided.'}</p>
-          </div>
-          <div className="text-right">
-            <div className="text-sm font-medium text-[var(--text-muted)] mb-1">{progress}% Complete</div>
-            <div className="w-32 h-2 bg-[var(--bg2)] rounded-full overflow-hidden border border-[var(--border)]">
-              <div 
-                className={`h-full transition-all duration-500 ${progress === 100 ? 'bg-green-500' : 'bg-[var(--accent)]'}`}
-                style={{ width: `${progress}%` }}
+        <header className="mb-8 p-6 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
+          {isEditingProject ? (
+            <div className="space-y-4">
+              <input 
+                className="w-full text-2xl font-bold bg-[var(--bg2)] border border-[var(--border)] rounded-lg px-3 py-1 outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                value={editedProject.name}
+                onChange={e => setEditedProject({ ...editedProject, name: e.target.value })}
               />
+              <textarea 
+                className="w-full text-[var(--text-muted)] bg-[var(--bg2)] border border-[var(--border)] rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none"
+                value={editedProject.description}
+                onChange={e => setEditedProject({ ...editedProject, description: e.target.value })}
+                rows={2}
+              />
+              <div className="flex gap-2">
+                <button onClick={handleUpdateProject} className="btn btn-primary flex items-center gap-2 py-1.5 px-4 text-sm">
+                  <Save size={16} /> Save Changes
+                </button>
+                <button onClick={() => setIsEditingProject(false)} className="btn btn-ghost flex items-center gap-2 py-1.5 px-4 text-sm">
+                  <X size={16} /> Cancel
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-bold text-[var(--heading)]">{project?.name}</h1>
+                  <button onClick={() => setIsEditingProject(true)} className="p-1 text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
+                    <Settings size={18} />
+                  </button>
+                </div>
+                <p className="text-[var(--text-muted)]">{project?.description || 'No description provided.'}</p>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-bold text-[var(--heading)] mb-1">{progress}% Done</div>
+                <div className="w-32 h-2 bg-[var(--bg2)] rounded-full overflow-hidden border border-[var(--border)]">
+                  <div 
+                    className={`h-full transition-all duration-500 ${progress === 100 ? 'bg-green-500' : 'bg-[var(--accent)]'}`}
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </header>
 
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden mb-8">
@@ -197,17 +241,13 @@ const ProjectDetails = () => {
                   onChange={(e) => setNewTask(e.target.value)}
                   required
                 />
-                <button
-                  type="submit"
-                  disabled={isAdding}
-                  className="btn btn-primary px-6"
-                >
+                <button type="submit" disabled={isAdding} className="btn btn-primary px-6">
                   {isAdding ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />}
                 </button>
               </div>
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Priority</span>
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Priority</span>
                   <div className="flex gap-1">
                     {['Low', 'Medium', 'High'].map((p) => (
                       <button
@@ -226,7 +266,7 @@ const ProjectDetails = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Due Date</span>
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Due Date</span>
                   <input
                     type="date"
                     className="px-2 py-1 rounded-md text-[10px] font-medium border border-[var(--border)] bg-[var(--surface)] text-[var(--heading)] focus:ring-1 focus:ring-[var(--accent)] outline-none"
@@ -260,7 +300,7 @@ const ProjectDetails = () => {
           <div className="divide-y divide-[var(--border)]">
             {filteredTasks.length === 0 ? (
               <div className="p-12 text-center text-[var(--text-muted)]">
-                {tasks.length === 0 ? "No tasks yet." : "No tasks match this filter."}
+                {tasks.length === 0 ? "Empty list." : "No tasks match filter."}
               </div>
             ) : (
               filteredTasks.map((task) => (

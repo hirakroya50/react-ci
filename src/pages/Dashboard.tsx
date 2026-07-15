@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../components/AuthProvider';
-import { Plus, Trash2, Loader2, ArrowRight, CheckCircle2, Archive, Activity } from 'lucide-react';
+import { Plus, Trash2, Loader2, ArrowRight, CheckCircle2, Archive, Activity, Search, LayoutGrid, List } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Project {
@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [newProject, setNewProject] = useState({ name: '', description: '' });
   const [view, setView] = useState<'active' | 'archived'>('active');
 
@@ -116,7 +117,7 @@ const Dashboard = () => {
 
   const handleDeleteProject = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!confirm('Permanently delete this project?')) return;
+    if (!confirm('Permanently delete this project and all its tasks?')) return;
     
     try {
       const { error } = await supabase
@@ -133,40 +134,93 @@ const Dashboard = () => {
     }
   };
 
-  const filteredProjects = projects.filter(p => p.status === view);
+  const filteredProjects = useMemo(() => {
+    return projects
+      .filter(p => p.status === view)
+      .filter(p => 
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+  }, [projects, view, searchQuery]);
+
+  const workspaceStats = useMemo(() => {
+    const active = projects.filter(p => p.status === 'active');
+    const totalTasks = active.reduce((acc, p) => acc + (p.task_stats?.total || 0), 0);
+    const completedTasks = active.reduce((acc, p) => acc + (p.task_stats?.completed || 0), 0);
+    return {
+      activeCount: active.length,
+      totalTasks,
+      completedTasks,
+      completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+    };
+  }, [projects]);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] pt-24 pb-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-[var(--heading)]">Workspace</h1>
-            <p className="text-[var(--text-muted)]">Organize your projects and ship faster.</p>
+      <div className="max-w-5xl mx-auto">
+        <header className="mb-10">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-[var(--heading)]">Workspace</h1>
+              <p className="text-[var(--text-muted)]">Manage your projects and team activity.</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1 md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={16} />
+                <input 
+                  type="text"
+                  placeholder="Search projects..."
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm focus:ring-2 focus:ring-[var(--accent)] outline-none"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="flex bg-[var(--bg2)] p-1 rounded-xl border border-[var(--border)]">
+                <button 
+                  onClick={() => setView('active')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'active' ? 'bg-[var(--surface)] text-[var(--accent)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--heading)]'}`}
+                >
+                  <Activity size={14} /> Active
+                </button>
+                <button 
+                  onClick={() => setView('archived')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'archived' ? 'bg-[var(--surface)] text-[var(--accent)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--heading)]'}`}
+                >
+                  <Archive size={14} /> Archived
+                </button>
+              </div>
+            </div>
           </div>
-          
-          <div className="flex bg-[var(--bg2)] p-1 rounded-xl border border-[var(--border)]">
-            <button 
-              onClick={() => setView('active')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'active' ? 'bg-[var(--surface)] text-[var(--accent)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--heading)]'}`}
-            >
-              <Activity size={14} /> Active
-            </button>
-            <button 
-              onClick={() => setView('archived')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'archived' ? 'bg-[var(--surface)] text-[var(--accent)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--heading)]'}`}
-            >
-              <Archive size={14} /> Archived
-            </button>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)]">
+              <span className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-wider">Active Projects</span>
+              <div className="text-2xl font-bold text-[var(--heading)] mt-1">{workspaceStats.activeCount}</div>
+            </div>
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)]">
+              <span className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-wider">Pending Tasks</span>
+              <div className="text-2xl font-bold text-[var(--heading)] mt-1">{workspaceStats.totalTasks - workspaceStats.completedTasks}</div>
+            </div>
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)]">
+              <div className="flex justify-between items-start">
+                <span className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-wider">Workspace Health</span>
+                <span className="text-xs font-bold text-green-500">{workspaceStats.completionRate}%</span>
+              </div>
+              <div className="w-full h-1.5 bg-[var(--bg2)] rounded-full mt-3 overflow-hidden">
+                <div className="h-full bg-green-500" style={{ width: `${workspaceStats.completionRate}%` }} />
+              </div>
+            </div>
           </div>
         </header>
 
-        {view === 'active' && (
-          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm mb-8">
+        {view === 'active' && !searchQuery && (
+          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm mb-8 transition-all hover:border-[var(--accent)]">
+            <h3 className="text-sm font-bold text-[var(--heading)] mb-4">Start New Project</h3>
             <form onSubmit={handleAddProject} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
                   type="text"
-                  placeholder="New project name..."
+                  placeholder="Project Name..."
                   className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg2)] text-[var(--heading)] focus:ring-2 focus:ring-[var(--accent)] outline-none"
                   value={newProject.name}
                   onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
@@ -174,7 +228,7 @@ const Dashboard = () => {
                 />
                 <input
                   type="text"
-                  placeholder="Short description..."
+                  placeholder="Description..."
                   className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg2)] text-[var(--heading)] focus:ring-2 focus:ring-[var(--accent)] outline-none"
                   value={newProject.description}
                   onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
@@ -199,8 +253,10 @@ const Dashboard = () => {
         ) : (
           <div className="grid gap-4">
             {filteredProjects.length === 0 ? (
-              <div className="text-center p-16 bg-[var(--bg2)] rounded-2xl border border-dashed border-[var(--border)]">
-                <p className="text-[var(--text-muted)]">No {view} projects found.</p>
+              <div className="text-center p-20 bg-[var(--bg2)] rounded-2xl border border-dashed border-[var(--border)]">
+                <p className="text-[var(--text-muted)] font-medium">
+                  {searchQuery ? `No matches found for "${searchQuery}"` : `Your ${view} workspace is empty.`}
+                </p>
               </div>
             ) : (
               filteredProjects.map((project) => {
@@ -230,8 +286,8 @@ const Dashboard = () => {
                             />
                           </div>
                         </div>
-                        <span className="text-[10px] uppercase font-black text-[var(--text-muted)]">
-                          {completed}/{total} Tasks ({progress}%)
+                        <span className="text-[10px] uppercase font-black text-[var(--text-muted)] tracking-tighter">
+                          {completed}/{total} Tasks • {progress}%
                         </span>
                       </div>
                     </div>
@@ -239,19 +295,19 @@ const Dashboard = () => {
                     <div className="flex items-center gap-2 mt-6 md:mt-0 pt-6 md:pt-0 border-t md:border-t-0 border-[var(--border)]">
                       <button 
                         onClick={(e) => toggleProjectStatus(e, project.id, project.status)}
-                        className={`p-2 rounded-xl transition-all ${view === 'active' ? 'text-gray-400 hover:text-amber-500 hover:bg-amber-50' : 'text-amber-500 hover:text-green-600 hover:bg-green-50'}`}
+                        className={`p-2.5 rounded-xl transition-all ${view === 'active' ? 'text-gray-400 hover:text-amber-500 hover:bg-amber-50' : 'text-amber-500 hover:text-green-600 hover:bg-green-50'}`}
                         title={view === 'active' ? 'Archive Project' : 'Restore Project'}
                       >
                         {view === 'active' ? <Archive size={20} /> : <Activity size={20} />}
                       </button>
                       <button 
                         onClick={(e) => handleDeleteProject(e, project.id)}
-                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                        className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                         title="Delete Project"
                       >
                         <Trash2 size={20} />
                       </button>
-                      <div className="ml-2 p-2 bg-[var(--bg2)] text-[var(--accent)] rounded-xl group-hover:bg-[var(--accent-glow)] transition-all">
+                      <div className="ml-2 p-2.5 bg-[var(--bg2)] text-[var(--accent)] rounded-xl group-hover:bg-[var(--accent-glow)] transition-all">
                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
