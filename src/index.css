@@ -88,3 +88,10 @@ button {
   background: none;
   font: inherit;
 }
+
+/* Keep auth credentials readable in both login and signup states. */
+.auth-input,
+.auth-input::placeholder {
+  color: var(--heading) !important;
+  opacity: 1;
+}

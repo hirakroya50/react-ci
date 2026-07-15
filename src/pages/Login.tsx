@@ -56,12 +56,22 @@ const Login = () => {
               supabaseClient={supabase}
               appearance={{
                 theme: ThemeSupa,
+                className: {
+                  input: "auth-input",
+                },
                 variables: {
                   default: {
                     colors: {
                       brand: "#6366f1",
                       brandAccent: "#4f46e5",
                     },
+                  },
+                },
+                style: {
+                  input: {
+                    color: "var(--heading)",
+                    background: "var(--surface-strong)",
+                    borderColor: "var(--border)",
                   },
                 },
               }}
