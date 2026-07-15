@@ -38,6 +38,7 @@ const Dashboard = () => {
 
       if (projectsError) throw projectsError;
 
+      // Fetch task stats for each project to show progress bars
       const projectsWithStats = await Promise.all((projectsData || []).map(async (project) => {
         const { count: total } = await supabase
           .from('tasks')
