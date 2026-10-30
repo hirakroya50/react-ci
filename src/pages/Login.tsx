@@ -23,11 +23,11 @@ const Login = () => {
               Nexus Workspace
             </span>
             <h1 className="mt-6 text-4xl font-black leading-tight tracking-[-0.04em] text-[var(--heading)] sm:text-5xl">
-              Welcome back
+              Hi, Welcome back
             </h1>
             <p className="mt-4 max-w-md text-base text-[var(--text-muted)]">
               Sign in to resume your projects, track progress, and keep your
-              team flow focused.
+              team flow focused. Yo
             </p>
           </div>
 
